@@ -7,18 +7,19 @@ Recursos:
     * nome completo
     * sigla
     * população estimada
-- População baseada na estimativa oficial do IBGE com referência em 01/07/2026.
+- População baseada no Censo Demográfico 2022 do IBGE.
 - A malha GeoJSON é baixada automaticamente uma única vez e armazenada
   localmente para permitir novas execuções sem novo download.
 - O mapa é aberto no navegador padrão e não usa WebSocket.
+- Sem tiles de mapa (apenas contorno dos estados).
 
 Fonte da malha:
 IBGE, disponibilizada em GeoJSON pelo projeto br-geojson:
 https://github.com/henriquemalvar/br-geojson
 
 Fonte da população:
-IBGE - Estimativas da População 2026:
-https://ftp.ibge.gov.br/Estimativas_de_Populacao/Estimativas_2026/estimativa_dou_2026.pdf
+IBGE - Censo Demográfico 2022:
+https://www.ibge.gov.br/estatisticas/sociais/populacao/22827-censo-demografico-2022.html
 """
 
 from __future__ import annotations
@@ -44,35 +45,35 @@ GEOJSON_URL = (
 CACHE_FILE = Path(__file__).with_name("brasil_estados.geojson")
 
 
-# População estimada pelo IBGE, com data de referência em 01/07/2026.
-POPULACAO_2026 = {
-    "RO": 1_757_338,
-    "AC": 887_794,
-    "AM": 4_360_926,
-    "RR": 761_012,
-    "PA": 8_756_324,
-    "AP": 809_953,
-    "TO": 1_595_994,
-    "MA": 7_024_557,
-    "PI": 3_392_617,
-    "CE": 9_302_211,
-    "RN": 3_463_737,
-    "PB": 4_182_828,
-    "PE": 9_583_176,
-    "AL": 3_221_128,
-    "SE": 2_307_255,
-    "BA": 14_889_472,
-    "MG": 21_460_311,
-    "ES": 4_150_692,
-    "RJ": 17_225_410,
-    "SP": 46_179_008,
-    "PR": 11_952_456,
-    "SC": 8_312_759,
-    "RS": 11_233_317,
-    "MS": 2_946_317,
-    "MT": 3_950_330,
-    "GO": 7_495_033,
-    "DF": 3_009_996,
+# População conforme Censo Demográfico 2022 do IBGE
+POPULACAO_2022 = {
+    "RO": 1_581_016,
+    "AC": 906_876,
+    "AM": 4_144_597,
+    "RR": 726_780,
+    "PA": 8_602_865,
+    "AP": 845_731,
+    "TO": 1_555_229,
+    "MA": 7_114_598,
+    "PI": 3_289_290,
+    "CE": 9_187_103,
+    "RN": 3_168_027,
+    "PB": 3_974_687,
+    "PE": 9_616_621,
+    "AL": 3_127_511,
+    "SE": 2_298_696,
+    "BA": 14_873_064,
+    "MG": 21_168_791,
+    "ES": 3_833_486,
+    "RJ": 16_055_174,
+    "SP": 45_919_049,
+    "PR": 11_537_222,
+    "SC": 7_610_361,
+    "RS": 10_882_635,
+    "MS": 2_778_986,
+    "MT": 3_658_649,
+    "GO": 7_206_589,
+    "DF": 2_817_381,
 }
 
 
@@ -169,22 +170,22 @@ def enriquecer_geojson(geojson: dict) -> dict:
                 f"A unidade {sigla} não possui nome na malha GeoJSON."
             )
 
-        if sigla not in POPULACAO_2026:
+        if sigla not in POPULACAO_2022:
             raise RuntimeError(
                 f"Não existe população cadastrada para a UF {sigla}."
             )
 
-        populacao = POPULACAO_2026[sigla]
+        populacao = POPULACAO_2022[sigla]
 
         props["nome"] = nome
         props["sigla"] = sigla
-        props["populacao_2026"] = populacao
+        props["populacao_2022"] = populacao
         props["populacao_formatada"] = formatar_populacao(populacao)
 
         siglas_encontradas.add(sigla)
 
-    ausentes = set(POPULACAO_2026) - siglas_encontradas
-    extras = siglas_encontradas - set(POPULACAO_2026)
+    ausentes = set(POPULACAO_2022) - siglas_encontradas
+    extras = siglas_encontradas - set(POPULACAO_2022)
 
     if ausentes or extras:
         raise RuntimeError(
@@ -198,12 +199,13 @@ def enriquecer_geojson(geojson: dict) -> dict:
 def criar_mapa(geojson: dict) -> folium.Map:
     """Cria e configura o mapa interativo do Brasil."""
 
+    # Cria o mapa sem tiles
     mapa = folium.Map(
         location=[-14.2, -52.8],
         zoom_start=4,
         min_zoom=3,
         max_zoom=8,
-        tiles="CartoDB positron",
+        tiles=None,  # Remove os tiles do mapa
         control_scale=True,
         prefer_canvas=True,
     )
@@ -216,16 +218,16 @@ def criar_mapa(geojson: dict) -> folium.Map:
             "#66BB6A",
             "#2E7D32",
         ],
-        vmin=min(POPULACAO_2026.values()),
-        vmax=max(POPULACAO_2026.values()),
+        vmin=min(POPULACAO_2022.values()),
+        vmax=max(POPULACAO_2022.values()),
     )
 
-    escala.caption = "População estimada da Unidade da Federação — IBGE 2026"
+    escala.caption = "População - Censo Demográfico IBGE 2022"
     escala.add_to(mapa)
 
     def estilo_padrao(feature: dict) -> dict:
         sigla = obter_sigla(feature)
-        populacao = POPULACAO_2026[sigla]
+        populacao = POPULACAO_2022[sigla]
 
         return {
             "fillColor": escala(populacao),
@@ -236,7 +238,7 @@ def criar_mapa(geojson: dict) -> folium.Map:
 
     def estilo_hover(feature: dict) -> dict:
         sigla = obter_sigla(feature)
-        populacao = POPULACAO_2026[sigla]
+        populacao = POPULACAO_2022[sigla]
 
         return {
             "fillColor": escala(populacao),
@@ -254,7 +256,7 @@ def criar_mapa(geojson: dict) -> folium.Map:
         aliases=[
             "Estado:",
             "Sigla:",
-            "População estimada (2026):",
+            "População (Censo 2022):",
         ],
         labels=True,
         sticky=True,
@@ -283,7 +285,7 @@ def criar_mapa(geojson: dict) -> folium.Map:
         aliases=[
             "Estado:",
             "Sigla:",
-            "População estimada (2026):",
+            "População (Censo 2022):",
         ],
         labels=True,
         localize=True,
@@ -330,7 +332,7 @@ def criar_mapa(geojson: dict) -> folium.Map:
         </div>
         <div style="margin-top: 4px; font-size: 12px; color: #555;">
             Passe a seta do mouse sobre uma unidade federativa
-            para ver estado, sigla e população.
+            para ver estado, sigla e população (Censo 2022).
         </div>
     </div>
     """
