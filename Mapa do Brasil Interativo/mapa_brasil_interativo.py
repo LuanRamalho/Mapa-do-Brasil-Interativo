@@ -210,6 +210,19 @@ def criar_mapa(geojson: dict) -> folium.Map:
         prefer_canvas=True,
     )
 
+    # Alterar cor de fundo do mapa (AQUI, depois de criar o mapa)
+    estilo_fundo = """
+    <style>
+        body {
+            background-color: #b8fdff;
+        }
+        .leaflet-container {
+            background-color: #b8fdff;  /* Azul muito claro */
+        }
+    </style>
+    """
+    mapa.get_root().html.add_child(folium.Element(estilo_fundo))
+
     # Escala de cores baseada na população das UFs.
     escala = LinearColormap(
         colors=[
