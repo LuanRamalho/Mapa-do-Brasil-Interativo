@@ -1,52 +1,31 @@
 MAPA INTERATIVO DO BRASIL
-==========================
+Instale Python 3.10 ou superior.
 
-1. Instale Python 3.10 ou superior.
+Abra o Prompt de Comando na pasta do programa.
 
-2. Abra o Prompt de Comando na pasta do programa.
+Instale as dependências:
 
-3. Instale as dependências:
+py -m pip install -r requirements.txt
 
-   py -m pip install -r requirements.txt
+Execute:
 
-4. Execute:
+py mapa_brasil_interativo.py
 
-   py mapa_brasil_interativo.py
+Na primeira execução, o programa baixa a malha GeoJSON das 27 unidades federativas e cria o arquivo:
 
-Na primeira execução, o programa baixa a malha GeoJSON das 27 unidades
-federativas e cria o arquivo:
-
-   brasil_estados.geojson
+brasil_estados.geojson
 
 Depois disso, o arquivo local é reutilizado.
 
 O programa também cria:
 
-   mapa_brasil_interativo.html
+mapa_brasil_interativo.html
 
 O HTML é aberto automaticamente no navegador padrão.
 
 COMO FUNCIONA
---------------
-- O mapa contém 26 estados + Distrito Federal.
-- Passe o mouse sobre qualquer unidade federativa.
-- O tooltip mostra:
-  Estado
-  Sigla
-  População estimada para 2026
-- Clique em uma unidade para abrir um quadro adicional com os mesmos dados.
-- Não utiliza WebSocket, servidor local ou framework de tempo real.
-
-FONTES
-------
-Malha geográfica:
-IBGE, por meio do projeto br-geojson, que disponibiliza os polígonos
-das 27 UFs em GeoJSON e informa o IBGE como fonte dos dados.
-
-População:
-IBGE - Estimativas da população residente no Brasil e Unidades da
-Federação, com data de referência em 1º de julho de 2026.
-
-Observação:
-A população de 2026 é uma estimativa oficial do IBGE, não o resultado
-de um novo Censo.
+O mapa contém 26 estados + Distrito Federal.
+Passe o mouse sobre qualquer unidade federativa.
+O tooltip mostra: Estado Sigla População conforme Censo Demográfico 2022 do IBGE
+Clique em uma unidade para abrir um quadro adicional com os mesmos dados.
+Não utiliza WebSocket, servidor local ou framework de tempo real.
